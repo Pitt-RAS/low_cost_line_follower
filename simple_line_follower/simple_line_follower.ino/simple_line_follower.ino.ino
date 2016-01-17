@@ -13,6 +13,8 @@ int leftSense;
 int rightSense;
 int leftMotorSpeed;
 int rightMotorSpeed;
+int minSense = 100;
+int maxSense = 100;
 int darkThreshold = 100;
 int maxSpeed = 150;
 int lowSpeed = -150; 
@@ -52,6 +54,28 @@ void loop()
   //delay(200);
 
 
+  // resetting the max and min values only works if the robot is never lifted from the driving surface
+  // reset what the min sense value is if a reading is lower than min
+  if (leftSense < minSense) {
+    minSense = leftSense;
+    darkThreshold = (minSense + maxSense) / 2;
+  }
+  if (rightSesne < minSense) {
+    minSense = rightSense;
+    darkThreshold = (minSense + maxSense) / 2;
+  }
+
+  // reset what the max sense value is if a reading is higher than max
+  if (leftSense > maxSense) {
+    maxSense = leftSense;
+    darkThreshold = (minSense + maxSense) / 2;
+  }
+  if (rightSense > maxSense) {
+    maxSense = rightSense;
+    darkThreshold = (minSense + maxSense) / 2;
+  }
+  
+ 
   //Determining Motor Speeds  
   if((rightSense > darkThreshold) && (leftSense < darkThreshold))//rightSense sees white, leftSense sees black
   {
