@@ -1,43 +1,39 @@
 //********************Line Following Robot Code**********************
 //Created by Brandon Contino and Quentin Torgerson for Pitt RAS Line Following Robot
-//May 16, 2015
-//Last Updated: May 16, 2015
-//DarkOnLight: This refers to the operation of the robot when utilizing a dark line on a lighter background
-//LightOnDark: This refers to the operation of the robot when utilizing a light line on a darker background
-
 
 //Establishing Global Variables
-const byte sensePinLeft = 1;
-const byte sensePinRight = 2;
-const byte motorPinLeft1 = 3;
-const byte motorPinLeft2 = 4;
-const byte motorPinRight1 = 5;
-const byte motorPinRight2 = 6;
+const byte sensePinLeft = A6;
+const byte sensePinRight = A7;
+const byte motorPinLeft1 = 10;
+const byte motorPinLeft2 = 11;
+const byte motorPinRight1 = 9;
+const byte motorPinRight2 = 3;
+const byte emitterPin = 2;
 int leftSense;
 int rightSense;
-int maxSense = 
 int leftMotorSpeed;
 int rightMotorSpeed;
-int maxSpeed = 255;
-
+int darkThreshold = 100;
+int maxSpeed = 150;
+int lowSpeed = -150; 
 
 void setup()
 {
-  pinMode(sensePinLeft,INPUT);
-  pinMode(sensePinRight,INPUT);
   pinMode(motorPinLeft1,OUTPUT);
   digitalWrite(motorPinLeft1,LOW);
   pinMode(motorPinLeft2,OUTPUT);
   digitalWrite(motorPinLeft2,LOW);
   pinMode(motorPinRight1,OUTPUT);
   digitalWrite(motorPinRight1,LOW);
-  digitalWrite(motorPinRight2,OUTPUT);
+  pinMode(motorPinRight2,OUTPUT);
   digitalWrite(motorPinRight2,LOW);
+  
+  pinMode(emitterPin, OUTPUT);
+  digitalWrite(emitterPin, HIGH);
   if(maxSpeed > 255)
     maxSpeed = 255;
   else if (maxSpeed < 0)
     maxSpeed = 0;
-  int halfMaxSpeed = maxSpeed*.5;
   
   //Serial.begin(9600); //Uncomment for Debugging
   delay(2000); //Allows time for operator to place after plugging in
@@ -48,27 +44,42 @@ void loop()
   //Check Line Sensors
   leftSense = analogRead(sensePinLeft);
   rightSense = analogRead(sensePinRight);
-  
+
+  //uncomment for debugging
+  //Serial.println(leftSense);
+  //Serial.println(rightSense);
+  //Serial.println(" ");
+  //delay(200);
+
+
   //Determining Motor Speeds  
-  if(leftSense > rightSense) //(leftSense > righSense) for DarkOnLight Operation; (leftSense < rightSense) for LightOnDark Operation
+  if((rightSense > darkThreshold) && (leftSense < darkThreshold))//rightSense sees white, leftSense sees black
   {
-    leftMotorSpeed = maxSpeed;
-    rightMotorSpeed = halfMaxSpeed;
-  }
-  else if(leftSense < rightSense)//(leftSense < righSense) for DarkOnLight Operation; (leftSense > rightSense) for LightOnDark Operation
-  {
-    leftMotorSpeed = halfMaxSpeed;
+    //turn left
+    leftMotorSpeed = lowSpeed;
     rightMotorSpeed = maxSpeed;
   }
-  else//Both are equal, not likely to happen
+  else if((leftSense > darkThreshold) && (rightSense < darkThreshold))//leftSense sees white, rightSense sees black
   {
+    //turn right
+    leftMotorSpeed = maxSpeed;
+    rightMotorSpeed = lowSpeed;
+  }
+  else if((leftSense < darkThreshold) && (rightSense < darkThreshold))//both see black
+  {
+    //go straight
     leftMotorSpeed = maxSpeed;
     rightMotorSpeed = maxSpeed;
+  }
+  else//both see white, off the line
+  {
+    //continue the previous motor speeds
   }
   
   //Drives the Motors to the Set Speed
   driveMotors(leftMotorSpeed , rightMotorSpeed);
 }
+
 
 ///////////// Motor Driving Function ////////////////////////////////////////////
 void driveMotors(int left , int right){  // -255 means backwards, 255 means forwards
